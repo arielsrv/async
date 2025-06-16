@@ -9,7 +9,6 @@ import (
 // but will be available at some point, or an error if that value could
 // not be made available.
 type Future[T any] interface {
-
 	// Map creates a new Future by applying a function to the successful
 	// result of this Future.
 	Map(func(T) (T, error)) Future[T]
@@ -41,11 +40,11 @@ type Future[T any] interface {
 
 // futureImpl implements the Future interface.
 type futureImpl[T any] struct {
-	acceptOnce   sync.Once
-	completeOnce sync.Once
-	done         chan any
 	value        T
 	err          error
+	done         chan any
+	acceptOnce   sync.Once
+	completeOnce sync.Once
 }
 
 // Verify futureImpl satisfies the Future interface.

@@ -2,7 +2,6 @@ package async
 
 // A Map is an object that maps keys to values.
 type Map[K comparable, V any] interface {
-
 	// Clear removes all of the mappings from this map.
 	Clear()
 

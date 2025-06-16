@@ -1,4 +1,4 @@
-package async
+package async_test
 
 import (
 	"strconv"
@@ -6,11 +6,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/reugn/async"
+
 	"github.com/reugn/async/internal/assert"
 )
 
 func TestPriorityLock(t *testing.T) {
-	p := NewPriorityLock(5)
+	p := async.NewPriorityLock(5)
 	var b strings.Builder
 
 	p.Lock() // acquire first to make the result predictable
@@ -18,7 +20,7 @@ func TestPriorityLock(t *testing.T) {
 		time.Sleep(time.Millisecond)
 		p.Unlock()
 	}()
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		for j := 5; j > 0; j-- {
 			go func(n int) {
 				p.LockP(n)
@@ -41,7 +43,7 @@ func TestPriorityLock(t *testing.T) {
 }
 
 func TestPriorityLock_LockRange(t *testing.T) {
-	p := NewPriorityLock(2)
+	p := async.NewPriorityLock(2)
 	var b strings.Builder
 	p.LockP(-1)
 	b.WriteRune('1')
@@ -53,7 +55,7 @@ func TestPriorityLock_LockRange(t *testing.T) {
 }
 
 func TestPriorityLock_Panic(t *testing.T) {
-	p := NewPriorityLock(2)
+	p := async.NewPriorityLock(2)
 	p.Lock()
 	time.Sleep(time.Nanosecond) // to silence empty critical section warning
 	p.Unlock()
@@ -61,6 +63,6 @@ func TestPriorityLock_Panic(t *testing.T) {
 }
 
 func TestPriorityLock_Validation(t *testing.T) {
-	assert.PanicMsgContains(t, func() { NewPriorityLock(-1) }, "nonpositive maximum priority")
-	assert.PanicMsgContains(t, func() { NewPriorityLock(2048) }, "exceeds hard limit")
+	assert.PanicMsgContains(t, func() { async.NewPriorityLock(-1) }, "nonpositive maximum priority")
+	assert.PanicMsgContains(t, func() { async.NewPriorityLock(2048) }, "exceeds hard limit")
 }

@@ -1,4 +1,4 @@
-package benchmarks
+package benchmarks_test
 
 import (
 	"math"
@@ -16,10 +16,10 @@ var (
 	shards = 64
 )
 
-// go test -bench=. -benchmem -v
+// go test -bench=. -benchmem -v.
 func benchmarkMixedConcurrentLoad(m async.Map[mkey, int]) {
 	var wg sync.WaitGroup
-	for r := 0; r < iter; r++ {
+	for r := range iter {
 		from := r * iter
 		to := (r + 1) * iter
 		wg.Add(4)
@@ -58,7 +58,7 @@ func BenchmarkMapMixedLoad_ConcurrentMap(b *testing.B) {
 	m := async.NewConcurrentMap[mkey, int]()
 	b.ResetTimer()
 
-	for n := 0; n < b.N; n++ {
+	for range b.N {
 		benchmarkMixedConcurrentLoad(m)
 	}
 }
@@ -67,7 +67,7 @@ func BenchmarkMapMixedLoad_ShardedMap(b *testing.B) {
 	m := async.NewShardedMap[mkey, int](shards)
 	b.ResetTimer()
 
-	for n := 0; n < b.N; n++ {
+	for range b.N {
 		benchmarkMixedConcurrentLoad(m)
 	}
 }
@@ -79,7 +79,7 @@ func BenchmarkMapMixedLoad_ShardedMapWithHash(b *testing.B) {
 	)
 	b.ResetTimer()
 
-	for n := 0; n < b.N; n++ {
+	for range b.N {
 		benchmarkMixedConcurrentLoad(m)
 	}
 }
@@ -88,14 +88,14 @@ func BenchmarkMapMixedLoad_SynchronizedMap(b *testing.B) {
 	m := async.NewSynchronizedMap[mkey, int]()
 	b.ResetTimer()
 
-	for n := 0; n < b.N; n++ {
+	for range b.N {
 		benchmarkMixedConcurrentLoad(m)
 	}
 }
 
 func benchmarkReadConcurrentLoad(m async.Map[mkey, int]) {
 	var wg sync.WaitGroup
-	for r := 0; r < iter; r++ {
+	for r := range iter {
 		from := r * iter
 		to := (r + 1) * iter
 		wg.Add(5)
@@ -137,7 +137,7 @@ func benchmarkReadConcurrentLoad(m async.Map[mkey, int]) {
 }
 
 func fillMap(m async.Map[mkey, int]) {
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		m.Put(mkey{uint64(i), strconv.Itoa(i)}, util.Ptr(i))
 	}
 }
@@ -147,7 +147,7 @@ func BenchmarkMapReadLoad_ConcurrentMap(b *testing.B) {
 	fillMap(m)
 	b.ResetTimer()
 
-	for n := 0; n < b.N; n++ {
+	for range b.N {
 		benchmarkReadConcurrentLoad(m)
 	}
 }
@@ -157,7 +157,7 @@ func BenchmarkMapReadLoad_ShardedMap(b *testing.B) {
 	fillMap(m)
 	b.ResetTimer()
 
-	for n := 0; n < b.N; n++ {
+	for range b.N {
 		benchmarkReadConcurrentLoad(m)
 	}
 }
@@ -170,7 +170,7 @@ func BenchmarkMapReadLoad_ShardedMapWithHash(b *testing.B) {
 	fillMap(m)
 	b.ResetTimer()
 
-	for n := 0; n < b.N; n++ {
+	for range b.N {
 		benchmarkReadConcurrentLoad(m)
 	}
 }
@@ -180,14 +180,14 @@ func BenchmarkMapReadLoad_SynchronizedMap(b *testing.B) {
 	fillMap(m)
 	b.ResetTimer()
 
-	for n := 0; n < b.N; n++ {
+	for range b.N {
 		benchmarkReadConcurrentLoad(m)
 	}
 }
 
 func benchmarkWriteConcurrentLoad(m async.Map[mkey, int]) {
 	var wg sync.WaitGroup
-	for r := 0; r < iter; r++ {
+	for r := range iter {
 		from := r * iter
 		to := (r + 1) * iter
 		wg.Add(3)
@@ -220,7 +220,7 @@ func BenchmarkMapWriteLoad_ConcurrentMap(b *testing.B) {
 	m := async.NewConcurrentMap[mkey, int]()
 	b.ResetTimer()
 
-	for n := 0; n < b.N; n++ {
+	for range b.N {
 		benchmarkWriteConcurrentLoad(m)
 	}
 }
@@ -229,7 +229,7 @@ func BenchmarkMapWriteLoad_ShardedMap(b *testing.B) {
 	m := async.NewShardedMap[mkey, int](shards)
 	b.ResetTimer()
 
-	for n := 0; n < b.N; n++ {
+	for range b.N {
 		benchmarkWriteConcurrentLoad(m)
 	}
 }
@@ -241,7 +241,7 @@ func BenchmarkMapWriteLoad_ShardedMapWithHash(b *testing.B) {
 	)
 	b.ResetTimer()
 
-	for n := 0; n < b.N; n++ {
+	for range b.N {
 		benchmarkWriteConcurrentLoad(m)
 	}
 }
@@ -250,7 +250,7 @@ func BenchmarkMapWriteLoad_SynchronizedMap(b *testing.B) {
 	m := async.NewSynchronizedMap[mkey, int]()
 	b.ResetTimer()
 
-	for n := 0; n < b.N; n++ {
+	for range b.N {
 		benchmarkWriteConcurrentLoad(m)
 	}
 }

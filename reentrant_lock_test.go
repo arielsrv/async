@@ -1,14 +1,16 @@
-package async
+package async_test
 
 import (
 	"sync"
 	"testing"
 
+	"github.com/reugn/async"
+
 	"github.com/reugn/async/internal/assert"
 )
 
 type synchronizedAdder struct {
-	ReentrantLock
+	async.ReentrantLock
 	value int
 }
 
@@ -56,7 +58,7 @@ func Test_synchronizedAdder1(t *testing.T) {
 	adder := &synchronizedAdder{}
 	var wg sync.WaitGroup
 	wg.Add(5)
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		go func() {
 			defer wg.Done()
 			adder.addOne()
@@ -73,7 +75,7 @@ func Test_synchronizedAdder2(t *testing.T) {
 	adder := &synchronizedAdder{}
 	var wg sync.WaitGroup
 	wg.Add(5)
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		go func() {
 			defer wg.Done()
 			adder.addFive()

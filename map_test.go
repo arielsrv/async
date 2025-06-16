@@ -1,4 +1,4 @@
-package async
+package async_test
 
 import (
 	"runtime"
@@ -6,6 +6,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/reugn/async"
 
 	"github.com/reugn/async/internal/assert"
 	"github.com/reugn/async/internal/util"
@@ -152,52 +154,52 @@ func TestMap_Values(t *testing.T) {
 
 func TestShardedMap_ConstructorArguments(t *testing.T) {
 	assert.PanicMsgContains(t, func() {
-		NewShardedMap[int, string](0)
+		async.NewShardedMap[int, string](0)
 	}, "nonpositive shards")
 
 	assert.PanicMsgContains(t, func() {
-		NewShardedMapWithHash[int, string](0, func(_ int) uint64 { return 1 })
+		async.NewShardedMapWithHash[int, string](0, func(_ int) uint64 { return 1 })
 	}, "nonpositive shards")
 
 	assert.PanicMsgContains(t, func() {
-		NewShardedMapWithHash[int, string](2, nil)
+		async.NewShardedMapWithHash[int, string](2, nil)
 	}, "hashFunc is nil")
 
-	NewShardedMapWithHash[int, string](2, func(_ int) uint64 { return 1 })
+	async.NewShardedMapWithHash[int, string](2, func(_ int) uint64 { return 1 })
 }
 
 func TestConcurrentMap_MemoryLeaks(t *testing.T) {
 	var statsBefore runtime.MemStats
 	runtime.ReadMemStats(&statsBefore)
 
-	m := NewConcurrentMap[int, string]()
+	m := async.NewConcurrentMap[int, string]()
 
 	var wg sync.WaitGroup
 	wg.Add(4)
 	go func() {
 		defer wg.Done()
-		for i := 0; i < 1000000; i++ {
+		for i := range 1000000 {
 			m.Put(i, util.Ptr(strconv.Itoa(i)))
 			time.Sleep(time.Nanosecond)
 		}
 	}()
 	go func() {
 		defer wg.Done()
-		for i := 0; i < 1000; i++ {
+		for range 1000 {
 			m.Clear()
 			time.Sleep(time.Millisecond)
 		}
 	}()
 	go func() {
 		defer wg.Done()
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			m.KeySet()
 			time.Sleep(10 * time.Millisecond)
 		}
 	}()
 	go func() {
 		defer wg.Done()
-		for i := 0; i < 80; i++ {
+		for range 80 {
 			m.Values()
 			time.Sleep(12 * time.Millisecond)
 		}
@@ -218,16 +220,16 @@ func TestConcurrentMap_MemoryLeaks(t *testing.T) {
 
 func prepareTestMaps() []testMap {
 	tests := make([]testMap, 0, 2)
-	concurrentMap := NewConcurrentMap[int, string]()
+	concurrentMap := async.NewConcurrentMap[int, string]()
 	putValues(concurrentMap)
 	tests = append(tests, testMap{"concurrentMap", concurrentMap})
-	shardedMap := NewShardedMap[int, string](2)
+	shardedMap := async.NewShardedMap[int, string](2)
 	putValues(shardedMap)
 	tests = append(tests, testMap{"shardedMap", shardedMap})
 	return tests
 }
 
-func putValues(m Map[int, string]) {
+func putValues(m async.Map[int, string]) {
 	m.Put(1, util.Ptr("a"))
 	m.Put(2, util.Ptr("b"))
 	m.Put(3, util.Ptr("c"))
@@ -235,5 +237,5 @@ func putValues(m Map[int, string]) {
 
 type testMap struct {
 	name string
-	m    Map[int, string]
+	m    async.Map[int, string]
 }

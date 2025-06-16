@@ -8,9 +8,9 @@ import (
 // Once is an object that will execute the given function exactly once.
 // Any subsequent call will return the previous result.
 type Once[T any] struct {
-	runOnce sync.Once
 	result  T
 	err     error
+	runOnce sync.Once
 }
 
 // Do calls the function f if and only if Do is being called for the

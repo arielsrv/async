@@ -1,4 +1,4 @@
-package async
+package async_test
 
 import (
 	"context"
@@ -7,12 +7,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/reugn/async"
+
 	"github.com/reugn/async/internal/assert"
 )
 
 func TestExecutor(t *testing.T) {
-	ctx := context.Background()
-	executor := NewExecutor[int](ctx, NewExecutorConfig(2, 2))
+	ctx := t.Context()
+	executor := async.NewExecutor[int](ctx, async.NewExecutorConfig(2, 2))
 
 	job := func(_ context.Context) (int, error) {
 		time.Sleep(time.Millisecond)
@@ -37,10 +39,10 @@ func TestExecutor(t *testing.T) {
 
 	// the queue has reached its maximum capacity
 	future7, err := executor.Submit(job)
-	assert.ErrorIs(t, err, ErrExecutorQueueFull)
+	assert.ErrorIs(t, err, async.ErrExecutorQueueFull)
 	assert.IsNil(t, future7)
 
-	assert.Equal(t, executor.Status(), ExecutorStatusRunning)
+	assert.Equal(t, executor.Status(), async.ExecutorStatusRunning)
 
 	routines := runtime.NumGoroutine()
 
@@ -50,22 +52,22 @@ func TestExecutor(t *testing.T) {
 
 	// verify that submit fails after the executor was shut down
 	_, err = executor.Submit(job)
-	assert.ErrorIs(t, err, ErrExecutorShutDown)
+	assert.ErrorIs(t, err, async.ErrExecutorShutDown)
 
 	// validate the executor status
-	assert.Equal(t, executor.Status(), ExecutorStatusTerminating)
+	assert.Equal(t, executor.Status(), async.ExecutorStatusTerminating)
 	time.Sleep(10 * time.Millisecond)
-	assert.Equal(t, executor.Status(), ExecutorStatusShutDown)
+	assert.Equal(t, executor.Status(), async.ExecutorStatusShutDown)
 
 	assert.Equal(t, routines, runtime.NumGoroutine()+4)
 
 	assertFutureResult(t, 1, future1, future2, future3, future4)
-	assertFutureError(t, ErrExecutorShutDown, future5, future6)
+	assertFutureError(t, async.ErrExecutorShutDown, future5, future6)
 }
 
 func TestExecutor_context(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	executor := NewExecutor[int](ctx, NewExecutorConfig(2, 2))
+	ctx, cancel := context.WithCancel(t.Context())
+	executor := async.NewExecutor[int](ctx, async.NewExecutorConfig(2, 2))
 
 	job := func(_ context.Context) (int, error) {
 		return 0, errors.New("error")
@@ -82,14 +84,14 @@ func TestExecutor_context(t *testing.T) {
 	time.Sleep(5 * time.Millisecond)
 
 	_, err = executor.Submit(job)
-	assert.ErrorIs(t, err, ErrExecutorShutDown)
+	assert.ErrorIs(t, err, async.ErrExecutorShutDown)
 
-	assert.Equal(t, executor.Status(), ExecutorStatusShutDown)
+	assert.Equal(t, executor.Status(), async.ExecutorStatusShutDown)
 }
 
 func TestExecutor_jobPanic(t *testing.T) {
-	ctx := context.Background()
-	executor := NewExecutor[int](ctx, NewExecutorConfig(2, 2))
+	ctx := t.Context()
+	executor := async.NewExecutor[int](ctx, async.NewExecutorConfig(2, 2))
 
 	job := func(_ context.Context) (int, error) {
 		var i int
@@ -106,8 +108,9 @@ func TestExecutor_jobPanic(t *testing.T) {
 	_ = executor.Shutdown()
 }
 
-func submitJob[T any](t *testing.T, executor ExecutorService[T],
-	f func(context.Context) (T, error)) Future[T] {
+func submitJob[T any](t *testing.T, executor async.ExecutorService[T],
+	f func(context.Context) (T, error),
+) async.Future[T] {
 	future, err := executor.Submit(f)
 	assert.IsNil(t, err)
 
@@ -115,7 +118,7 @@ func submitJob[T any](t *testing.T, executor ExecutorService[T],
 	return future
 }
 
-func assertFutureResult[T any](t *testing.T, expected T, futures ...Future[T]) {
+func assertFutureResult[T any](t *testing.T, expected T, futures ...async.Future[T]) {
 	for _, future := range futures {
 		result, err := future.Join()
 		assert.IsNil(t, err)
@@ -123,7 +126,7 @@ func assertFutureResult[T any](t *testing.T, expected T, futures ...Future[T]) {
 	}
 }
 
-func assertFutureError[T any](t *testing.T, expected error, futures ...Future[T]) {
+func assertFutureError[T any](t *testing.T, expected error, futures ...async.Future[T]) {
 	for _, future := range futures {
 		result, err := future.Join()
 		var zero T

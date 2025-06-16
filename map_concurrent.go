@@ -137,10 +137,7 @@ func (cm *ConcurrentMap[K, V]) Values() []*V {
 }
 
 func (cm *ConcurrentMap[K, V]) smap() *sync.Map {
-	for {
-		if !cm.clearing.Load() {
-			break
-		}
+	for cm.clearing.Load() {
 		time.Sleep(time.Nanosecond)
 	}
 	return cm.m.Load()

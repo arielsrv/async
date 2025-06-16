@@ -10,7 +10,7 @@ import (
 func main() {
 	var wg sync.WaitGroup
 	wg.Add(5)
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		go func() {
 			id, _ := async.GoroutineID()
 			fmt.Println(id)

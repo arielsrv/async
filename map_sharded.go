@@ -11,9 +11,9 @@ import (
 // (shards), using a key hash to calculate the shard number.
 // A ShardedMap must not be copied.
 type ShardedMap[K comparable, V any] struct {
-	shards   uint64
-	shardMap []*SynchronizedMap[K, V]
 	hashFunc func(K) uint64
+	shardMap []*SynchronizedMap[K, V]
+	shards   uint64
 }
 
 var _ Map[int, any] = (*ShardedMap[int, any])(nil)
@@ -24,7 +24,7 @@ var _ Map[int, any] = (*ShardedMap[int, any])(nil)
 func NewShardedMap[K comparable, V any](shards int) *ShardedMap[K, V] {
 	return NewShardedMapWithHash[K, V](shards, func(key K) uint64 {
 		h := fnv.New64a()
-		h.Write([]byte(fmt.Sprint(key)))
+		fmt.Fprint(h, key)
 		return h.Sum64()
 	})
 }
@@ -40,7 +40,7 @@ func NewShardedMapWithHash[K comparable, V any](shards int, hashFunc func(K) uin
 		panic("hashFunc is nil")
 	}
 	shardMap := make([]*SynchronizedMap[K, V], shards)
-	for i := 0; i < shards; i++ {
+	for i := range shards {
 		shardMap[i] = NewSynchronizedMap[K, V]()
 	}
 	return &ShardedMap[K, V]{
@@ -139,8 +139,8 @@ func (sm *ShardedMap[K, V]) shard(key K) Map[K, V] {
 // delegating load/store operations to a Go map and using a sync.RWMutex
 // for synchronization.
 type SynchronizedMap[K comparable, V any] struct {
-	sync.RWMutex
 	store map[K]*V
+	sync.RWMutex
 }
 
 var _ Map[int, any] = (*SynchronizedMap[int, any])(nil)

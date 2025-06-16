@@ -1,19 +1,21 @@
-package async
+package async_test
 
 import (
 	"sync"
 	"sync/atomic"
 	"testing"
 
+	"github.com/reugn/async"
+
 	"github.com/reugn/async/internal/assert"
 	"github.com/reugn/async/internal/util"
 )
 
 func TestOnce(t *testing.T) {
-	var once Once[int]
+	var once async.Once[int]
 	var count int
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		count, _ = once.Do(func() (int, error) {
 			count++
 			return count, nil
@@ -23,10 +25,10 @@ func TestOnce(t *testing.T) {
 }
 
 func TestOnce_Ptr(t *testing.T) {
-	var once Once[*int]
+	var once async.Once[*int]
 	count := new(int)
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		count, _ = once.Do(func() (*int, error) {
 			*count++
 			return count, nil
@@ -36,11 +38,11 @@ func TestOnce_Ptr(t *testing.T) {
 }
 
 func TestOnce_Concurrent(t *testing.T) {
-	var once Once[*int32]
+	var once async.Once[*int32]
 	var count atomic.Int32
 	var wg sync.WaitGroup
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -56,11 +58,11 @@ func TestOnce_Concurrent(t *testing.T) {
 }
 
 func TestOnce_Panic(t *testing.T) {
-	var once Once[*int]
+	var once async.Once[*int]
 	count := new(int)
 	var err error
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		count, err = once.Do(func() (*int, error) {
 			*count /= *count
 			return count, nil

@@ -1,14 +1,16 @@
-package async
+package async_test
 
 import (
 	"testing"
+
+	"github.com/reugn/async"
 
 	"github.com/reugn/async/internal/assert"
 	"github.com/reugn/async/internal/util"
 )
 
 func TestValueCompareAndSwap(t *testing.T) {
-	var value Value
+	var value async.Value
 	swapped := value.CompareAndSwap(1, 2)
 	assert.Equal(t, swapped, false)
 	assert.IsNil(t, value.Load())
@@ -62,7 +64,7 @@ func TestValueCompareAndSwap(t *testing.T) {
 }
 
 func TestValueLoad(t *testing.T) {
-	var value Value
+	var value async.Value
 	assert.IsNil(t, value.Load())
 
 	value.Store(1)
@@ -70,7 +72,7 @@ func TestValueLoad(t *testing.T) {
 }
 
 func TestValueStore(t *testing.T) {
-	var value Value
+	var value async.Value
 	value.Store(1)
 	assert.Equal(t, value.Load(), 1)
 
@@ -85,7 +87,7 @@ func TestValueStore(t *testing.T) {
 }
 
 func TestValueSwap(t *testing.T) {
-	var value Value
+	var value async.Value
 	old := value.Swap(1)
 	assert.IsNil(t, old)
 

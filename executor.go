@@ -55,9 +55,9 @@ func NewExecutorConfig(workerPoolSize, queueSize int) *ExecutorConfig {
 
 // Executor implements the [ExecutorService] interface.
 type Executor[T any] struct {
-	mtx    sync.RWMutex
 	cancel context.CancelFunc
 	queue  chan executorJob[T]
+	mtx    sync.RWMutex
 	status atomic.Uint32
 }
 
@@ -105,7 +105,7 @@ func (e *Executor[T]) monitorCtx(ctx context.Context) {
 
 func (e *Executor[T]) startWorkers(ctx context.Context, poolSize int) {
 	var wg sync.WaitGroup
-	for i := 0; i < poolSize; i++ {
+	for range poolSize {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

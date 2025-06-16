@@ -1,4 +1,4 @@
-package async
+package async_test
 
 import (
 	"context"
@@ -6,12 +6,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/reugn/async"
+
 	"github.com/reugn/async/internal/assert"
 )
 
 func TestWaitGroupContext(t *testing.T) {
 	var result atomic.Int32
-	wgc := NewWaitGroupContext(context.Background())
+	wgc := async.NewWaitGroupContext(t.Context())
 	wgc.Add(2)
 
 	go func() {
@@ -37,13 +39,13 @@ func TestWaitGroupContext(t *testing.T) {
 
 func TestWaitGroupContextCanceled(t *testing.T) {
 	var result atomic.Int32
-	ctx, cancelFunc := context.WithCancel(context.Background())
+	ctx, cancelFunc := context.WithCancel(t.Context())
 	go func() {
 		time.Sleep(100 * time.Millisecond)
 		result.Add(10)
 		cancelFunc()
 	}()
-	wgc := NewWaitGroupContext(ctx)
+	wgc := async.NewWaitGroupContext(ctx)
 	wgc.Add(2)
 
 	go func() {
@@ -69,7 +71,7 @@ func TestWaitGroupContextCanceled(t *testing.T) {
 
 func TestWaitGroupContextPanicNegativeCounter(t *testing.T) {
 	negativeCounter := func() {
-		wgc := NewWaitGroupContext(context.Background())
+		wgc := async.NewWaitGroupContext(t.Context())
 		wgc.Add(-2)
 	}
 	assert.PanicMsgContains(t, negativeCounter, "negative")
@@ -78,10 +80,10 @@ func TestWaitGroupContextPanicNegativeCounter(t *testing.T) {
 func TestWaitGroupContextPanicReused(t *testing.T) {
 	reusedBeforeWaitReturned := func() {
 		var result atomic.Int32
-		wgc := NewWaitGroupContext(context.Background())
+		wgc := async.NewWaitGroupContext(t.Context())
 
 		n := 10
-		for i := 0; i < n; i++ {
+		for range n {
 			wgc.Add(1)
 			go func() {
 				defer wgc.Add(1)
@@ -96,10 +98,10 @@ func TestWaitGroupContextPanicReused(t *testing.T) {
 
 func TestWaitGroupContextReused(t *testing.T) {
 	var result atomic.Int32
-	wgc := NewWaitGroupContext(context.Background())
+	wgc := async.NewWaitGroupContext(t.Context())
 
 	n := 1000
-	for i := 0; i < n; i++ {
+	for i := range n {
 		assert.Equal(t, int(result.Load()), i*3)
 		wgc.Add(2)
 		go func() {

@@ -5,7 +5,6 @@ import "sync"
 // Promise represents a writable, single-assignment container,
 // which completes a Future.
 type Promise[T any] interface {
-
 	// Success completes the underlying Future with a value.
 	Success(T)
 
@@ -18,8 +17,8 @@ type Promise[T any] interface {
 
 // promiseImpl implements the Promise interface.
 type promiseImpl[T any] struct {
-	once   sync.Once
 	future Future[T]
+	once   sync.Once
 }
 
 // Verify promiseImpl satisfies the Promise interface.

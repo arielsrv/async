@@ -1,0 +1,85 @@
+# yaml-language-server: $schema=https://json.schemastore.org/taskfile.json
+version: '3'
+
+env:
+  SOURCE_FOLDER: ./...
+  BUILD_FOLDER: build
+  COVERAGE_OUT_FILE: coverage.out
+  COVERAGE_HTML_FILE: coverage.html
+  GOEXPERIMENT: nocoverageredesign
+
+tasks:
+  
+  markdown:
+    cmds:
+      - markdownlint-cli2 "**/*.md" "#vendor"
+
+  audit:
+    cmds:
+      - go mod verify
+      - go vet ./...
+      - go tool govulncheck ./...
+
+  lint:
+    cmds:
+      - go tool golangci-lint run --fix
+      - go tool gofumpt -w -l .
+
+  lint:report:
+    cmds:
+      - go tool golangci-lint run --issues-exit-code 0 --print-issued-lines=false --out-format code-climate:gl-code-quality-report.json,line-number
+
+  race:
+    cmds:
+      - CGO_ENABLED=0 go test -race -count 5 ./...
+
+  test:
+    cmds:
+      - go test -v ./...
+
+  test:report:
+    cmds:
+      - go tool gotestsum --junitfile report.xml --format testname
+
+  mock:
+    cmds:
+      - go tool mockery --config .mockery.yaml
+
+  coverage:
+    cmds:
+      - go test $SOURCE_FOLDER -covermode=count -coverprofile=$COVERAGE_OUT_FILE
+      - go tool cover -html $COVERAGE_OUT_FILE -o $COVERAGE_HTML_FILE
+      - go tool cover -func=$COVERAGE_OUT_FILE -o=$COVERAGE_OUT_FILE
+
+  coverage:report:
+    cmds:
+      - CGO_ENABLED=0 go test $SOURCE_FOLDER -coverprofile=coverage-report.out
+
+  clean:
+    cmds:
+      - rm -rf $COVERAGE_OUT_FILE $COVERAGE_HTML_FILE
+
+  download:
+    cmds:
+      - go mod tidy
+
+  upgrade:
+    cmds:
+      - go tool go-mod-upgrade
+
+  build:
+    cmds:
+      - go build -v ./...
+
+  release:
+    cmds:
+      - task: download
+      - task: mock
+      - task: build
+      - task: lint
+      - task: test
+      - task: race
+
+  default:
+    cmds:
+      - task: release
