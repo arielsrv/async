@@ -2,7 +2,7 @@ module github.com/reugn/async
 
 go 1.24.4
 
-require github.com/stretchr/testify v1.11.0
+require github.com/stretchr/testify v1.11.1
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.3.0 // indirect
